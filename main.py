@@ -1,3 +1,8 @@
+from flask import Flask
+import threading
+import os
+import time
+
 from watchlist import (
     get_usdt_futures_pairs,
     analyze_watchlist
@@ -44,15 +49,37 @@ from datetime import (
     datetime
 )
 
-import time
+# =========================
+# FLASK (RENDER PORT FIX)
+# =========================
 
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Bot is running 😎"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )
+
+threading.Thread(
+    target=run_web,
+    daemon=True
+).start()
+
+# =========================
+# BOT START
+# =========================
 
 print(
     "🚀 BOT AÇILDI 😎"
 )
 
 last_report_day = None
-
 
 while True:
 
@@ -92,7 +119,7 @@ while True:
             f"❌ WR hata: {e}"
         )
 
-    # 📊 GÜN SONU REPORT
+    # 📊 GÜN SONU RAPOR
     try:
 
         print(
@@ -262,7 +289,7 @@ while True:
                 coin
             )
 
-            # 🔥 STRONG
+            # 🔥 STRONG SIGNAL
             analyze_strong_signal(
                 coin
             )
@@ -304,19 +331,3 @@ while True:
     time.sleep(
         120
     )
-
-from flask import Flask
-import threading
-import os
-
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Bot is running"
-
-def run_web():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-
-threading.Thread(target=run_web).start()
