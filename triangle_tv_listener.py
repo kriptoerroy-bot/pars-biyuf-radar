@@ -1,7 +1,11 @@
 from flask import Flask, request, jsonify
 from telegram_sender import send_message
-from config import TRIANGLE_TOPIC, PATTERN_TOPIC
+import os
 import threading
+
+# Environment variables
+TRIANGLE_TOPIC = int(os.getenv("TRIANGLE_TOPIC", 7000))
+PATTERN_TOPIC = int(os.getenv("PATTERN_TOPIC", 7001))
 
 app = Flask(__name__)
 
@@ -31,9 +35,7 @@ def webhook():
         tp3 = data.get("tp3", "")
         tv_link = data.get("tv_link", "")
 
-        # ─────────────────────────
         # TRIANGLE BREAKOUT
-        # ─────────────────────────
         if signal_type == "triangle_breakout":
 
             emoji = "🟢" if side == "LONG" else "🔴"
@@ -42,19 +44,13 @@ def webhook():
                 f"{emoji} <b>{symbol} {side}</b>\n\n"
                 f"📐 Triangle Breakout\n"
                 f"⚡ Güç: {strength}\n\n"
-
                 f"📍 <b>Entry:</b> {entry}\n\n"
-
                 f"🎯 TP1: {tp1}\n"
                 f"🎯 TP2: {tp2}\n"
                 f"🎯 TP3: {tp3}\n\n"
-
                 f"🛑 SL: {sl}\n\n"
-
                 f"⏰ TF: {tf}\n\n"
-
-                f'📊 <a href="{tv_link}">'
-                f'TradingView Aç</a>'
+                f'📊 <a href="{tv_link}">TradingView Aç</a>'
             )
 
             send_message(
@@ -62,9 +58,7 @@ def webhook():
                 TRIANGLE_TOPIC
             )
 
-        # ─────────────────────────
         # TP HIT
-        # ─────────────────────────
         elif signal_type == "tp_hit":
 
             target = data.get(
@@ -83,9 +77,7 @@ def webhook():
                 TRIANGLE_TOPIC
             )
 
-        # ─────────────────────────
         # SL HIT
-        # ─────────────────────────
         elif signal_type == "sl_hit":
 
             text = (
@@ -98,9 +90,7 @@ def webhook():
                 TRIANGLE_TOPIC
             )
 
-        # ─────────────────────────
         # CLASSIC PATTERN
-        # ─────────────────────────
         elif signal_type == "classic_pattern":
 
             pattern = data.get(
@@ -161,3 +151,7 @@ def start_tv_listener():
     print(
         "✅ TV Listener başladı"
     )
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
