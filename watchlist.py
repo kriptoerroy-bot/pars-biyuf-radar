@@ -27,9 +27,7 @@ def load_counter():
             "r"
         ) as f:
 
-            return json.load(
-                f
-            )
+            return json.load(f)
 
     return {}
 
@@ -41,61 +39,51 @@ def save_counter(data):
         "w"
     ) as f:
 
-        json.dump(
-            data,
-            f
-        )
+        json.dump(data, f)
 
 
 # ==================================
-# FUTURES COIN LIST (FIXED)
+# FUTURES COIN LIST (RENDER FIX)
 # ==================================
 
 def get_usdt_futures_pairs():
 
-    try:
+    urls = [
 
-        url = (
-            "https://fapi1.binance.com/"
-            "fapi/v1/exchangeInfo"
-        )
+        "https://fapi1.binance.com/fapi/v1/exchangeInfo",
+        "https://fapi2.binance.com/fapi/v1/exchangeInfo",
+        "https://fapi3.binance.com/fapi/v1/exchangeInfo"
 
-        headers = {
-            "User-Agent":
-            "Mozilla/5.0"
-        }
+    ]
 
-        response = requests.get(
-            url,
-            headers=headers,
-            timeout=15
-        )
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
-        response.raise_for_status()
+    for url in urls:
 
-        data = response.json()
+        try:
 
-        if "symbols" not in data:
-
-            print(
-                "❌ Binance veri dönmedi"
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=15
             )
 
-            print(data)
+            response.raise_for_status()
 
-            return []
+            data = response.json()
 
-        usdt_pairs = []
+            if "symbols" not in data:
+                continue
 
-        for symbol in data[
-            "symbols"
-        ]:
+            usdt_pairs = []
 
-            try:
+            for symbol in data["symbols"]:
 
-                symbol_name = symbol[
-                    "symbol"
-                ]
+                symbol_name = symbol.get(
+                    "symbol", ""
+                )
 
                 if (
                     symbol.get(
@@ -117,29 +105,29 @@ def get_usdt_futures_pairs():
                         symbol_name
                     )
 
-            except Exception as e:
+            print(
+                f"✅ {len(usdt_pairs)} futures coin bulundu"
+            )
 
-                print(
-                    f"❌ Symbol hata: {e}"
-                )
+            return sorted(
+                usdt_pairs
+            )
 
-                continue
+        except Exception as e:
 
-        print(
-            f"✅ {len(usdt_pairs)} futures coin bulundu"
-        )
+            print(
+                f"❌ Endpoint hata: {url}"
+            )
 
-        return sorted(
-            usdt_pairs
-        )
+            print(e)
 
-    except Exception as e:
+            continue
 
-        print(
-            f"❌ Coin çekme hatası: {e}"
-        )
+    print(
+        "❌ Binance futures listesi alınamadı"
+    )
 
-        return []
+    return []
 
 
 def get_klines(
@@ -148,63 +136,76 @@ def get_klines(
     limit=100
 ):
 
-    url = (
-        "https://fapi1.binance.com"
-        "/fapi/v1/klines"
-        f"?symbol={symbol}"
-        f"&interval={interval}"
-        f"&limit={limit}"
-    )
+    urls = [
 
-    try:
+        "https://fapi1.binance.com",
+        "https://fapi2.binance.com",
+        "https://fapi3.binance.com"
 
-        response = requests.get(
-            url,
-            timeout=10
-        )
+    ]
 
-        data = response.json()
+    for base_url in urls:
 
-        df = pd.DataFrame(
-            data
-        )
+        try:
 
-        if len(df) == 0:
-            return None
-
-        df = df.iloc[:, :6]
-
-        df.columns = [
-            "time",
-            "open",
-            "high",
-            "low",
-            "close",
-            "volume"
-        ]
-
-        for col in [
-            "open",
-            "high",
-            "low",
-            "close",
-            "volume"
-        ]:
-
-            df[col] = (
-                df[col]
-                .astype(float)
+            url = (
+                f"{base_url}"
+                "/fapi/v1/klines"
+                f"?symbol={symbol}"
+                f"&interval={interval}"
+                f"&limit={limit}"
             )
 
-        return df
+            response = requests.get(
+                url,
+                timeout=10
+            )
 
-    except Exception as e:
+            response.raise_for_status()
 
-        print(
-            f"❌ {symbol} veri hatası: {e}"
-        )
+            data = response.json()
 
-        return None
+            df = pd.DataFrame(
+                data
+            )
+
+            if len(df) == 0:
+                continue
+
+            df = df.iloc[:, :6]
+
+            df.columns = [
+                "time",
+                "open",
+                "high",
+                "low",
+                "close",
+                "volume"
+            ]
+
+            for col in [
+                "open",
+                "high",
+                "low",
+                "close",
+                "volume"
+            ]:
+
+                df[col] = (
+                    df[col]
+                    .astype(float)
+                )
+
+            return df
+
+        except Exception:
+            continue
+
+    print(
+        f"❌ {symbol} veri alınamadı"
+    )
+
+    return None
 
 
 def analyze_watchlist(
@@ -311,33 +312,42 @@ def analyze_watchlist(
 
     if score >= 4:
 
-        try:
+        daily_change = 0
 
-            ticker_url = (
-                "https://fapi1.binance.com/"
-                "fapi/v1/ticker/24hr"
-                f"?symbol={symbol}"
-            )
+        for base_url in [
 
-            ticker = (
-                requests.get(
-                    ticker_url,
-                    timeout=10
+            "https://fapi1.binance.com",
+            "https://fapi2.binance.com",
+            "https://fapi3.binance.com"
+
+        ]:
+
+            try:
+
+                ticker_url = (
+                    f"{base_url}"
+                    "/fapi/v1/ticker/24hr"
+                    f"?symbol={symbol}"
                 )
-                .json()
-            )
 
-            daily_change = (
-                float(
+                ticker = (
+                    requests.get(
+                        ticker_url,
+                        timeout=10
+                    )
+                    .json()
+                )
+
+                daily_change = float(
                     ticker[
                         "priceChangePercent"
                     ]
                 )
-            )
 
-        except:
+                break
 
-            daily_change = 0
+            except:
+                continue
 
         change_emoji = (
             "🟢"
