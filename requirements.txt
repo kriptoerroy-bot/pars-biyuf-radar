@@ -6,3 +6,4 @@ flask
 schedule
 yfinance
 ta
+tradingview-ta
