@@ -56,7 +56,7 @@ def get_usdt_futures_pairs():
     try:
 
         url = (
-            "https://fapi.binance.com/"
+            "https://fapi1.binance.com/"
             "fapi/v1/exchangeInfo"
         )
 
