@@ -1,5 +1,8 @@
 import requests
-from config import BOT_TOKEN, CHAT_ID
+import os
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
 
 
 def send_message(text, topic_id):
