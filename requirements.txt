@@ -1,7 +1,8 @@
 pandas
 numpy
 requests
+python-telegram-bot
 flask
-python-binance
-ta
 schedule
+yfinance
+ta
