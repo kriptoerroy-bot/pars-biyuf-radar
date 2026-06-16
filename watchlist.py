@@ -149,7 +149,7 @@ def get_klines(
 ):
 
     url = (
-        "https://fapi.binance.com"
+        "https://fapi1.binance.com"
         "/fapi/v1/klines"
         f"?symbol={symbol}"
         f"&interval={interval}"
@@ -314,7 +314,7 @@ def analyze_watchlist(
         try:
 
             ticker_url = (
-                "https://fapi.binance.com/"
+                "https://fapi1.binance.com/"
                 "fapi/v1/ticker/24hr"
                 f"?symbol={symbol}"
             )
