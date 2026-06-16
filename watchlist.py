@@ -47,21 +47,43 @@ def save_counter(data):
         )
 
 
-def get_usdt_futures_pairs():
+# ==================================
+# FUTURES COIN LIST (FIXED)
+# ==================================
 
-    url = (
-        "https://fapi.binance.com/"
-        "fapi/v1/exchangeInfo"
-    )
+def get_usdt_futures_pairs():
 
     try:
 
-        response = requests.get(
-            url,
-            timeout=10
+        url = (
+            "https://fapi.binance.com/"
+            "fapi/v1/exchangeInfo"
         )
 
+        headers = {
+            "User-Agent":
+            "Mozilla/5.0"
+        }
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=15
+        )
+
+        response.raise_for_status()
+
         data = response.json()
+
+        if "symbols" not in data:
+
+            print(
+                "❌ Binance veri dönmedi"
+            )
+
+            print(data)
+
+            return []
 
         usdt_pairs = []
 
@@ -69,37 +91,42 @@ def get_usdt_futures_pairs():
             "symbols"
         ]:
 
-            symbol_name = symbol[
-                "symbol"
-            ]
+            try:
 
-            if (
-                symbol[
-                    "quoteAsset"
+                symbol_name = symbol[
+                    "symbol"
                 ]
-                == "USDT"
-                and
-                symbol[
-                    "status"
-                ]
-                == "TRADING"
-                and
-                symbol[
-                    "contractType"
-                ]
-                == "PERPETUAL"
-                and "_"
-                not in symbol_name
-            ):
 
-                usdt_pairs.append(
-                    symbol_name
+                if (
+                    symbol.get(
+                        "quoteAsset"
+                    ) == "USDT"
+                    and
+                    symbol.get(
+                        "status"
+                    ) == "TRADING"
+                    and
+                    symbol.get(
+                        "contractType"
+                    ) == "PERPETUAL"
+                    and "_"
+                    not in symbol_name
+                ):
+
+                    usdt_pairs.append(
+                        symbol_name
+                    )
+
+            except Exception as e:
+
+                print(
+                    f"❌ Symbol hata: {e}"
                 )
 
+                continue
+
         print(
-            f"✅ "
-            f"{len(usdt_pairs)} "
-            f"coin bulundu"
+            f"✅ {len(usdt_pairs)} futures coin bulundu"
         )
 
         return sorted(
@@ -109,8 +136,7 @@ def get_usdt_futures_pairs():
     except Exception as e:
 
         print(
-            "❌ Coin çekme hatası:",
-            e
+            f"❌ Coin çekme hatası: {e}"
         )
 
         return []
@@ -143,6 +169,9 @@ def get_klines(
             data
         )
 
+        if len(df) == 0:
+            return None
+
         df = df.iloc[:, :6]
 
         df.columns = [
@@ -172,8 +201,7 @@ def get_klines(
     except Exception as e:
 
         print(
-            f"❌ {symbol} veri hatası:",
-            e
+            f"❌ {symbol} veri hatası: {e}"
         )
 
         return None
