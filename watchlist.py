@@ -3,6 +3,16 @@ import pandas as pd
 import json
 import os
 
+# BAĞLANTI TESTİ
+try:
+    r = requests.get(
+        "https://api.binance.com/api/v3/time",
+        timeout=10
+    )
+    print(f"🔗 Binance bağlantı testi: {r.status_code}", flush=True)
+except Exception as e:
+    print(f"❌ Bağlantı testi başarısız: {e}", flush=True)
+
 from ta.trend import EMAIndicator
 from ta.momentum import RSIIndicator
 
