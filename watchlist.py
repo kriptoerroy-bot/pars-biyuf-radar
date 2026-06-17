@@ -103,7 +103,9 @@ def get_usdt_futures_pairs():
             flush=True
         )
 
-        return sorted(usdt_pairs)
+        return sorted(
+            usdt_pairs
+        )
 
     except Exception as e:
 
@@ -113,19 +115,6 @@ def get_usdt_futures_pairs():
         )
 
         return []
-            print(
-                f"❌ Endpoint hata: {url}"
-            )
-
-            print(e)
-
-            continue
-
-    print(
-        "❌ Binance futures listesi alınamadı"
-    )
-
-    return []
 
 
 def get_klines(
@@ -421,7 +410,7 @@ ${coin_name} {change_emoji}{daily_change:+.2f}% 🛰️{signal_count}
 📈 {tv_link}
 
 🗣️ Pars:
-“Baba burada hareket kokusu var 👀🚀”
+"Baba burada hareket kokusu var 👀🚀"
 {power_text}
 """
 
