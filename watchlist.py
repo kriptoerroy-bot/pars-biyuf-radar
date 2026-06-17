@@ -48,73 +48,71 @@ def save_counter(data):
 
 def get_usdt_futures_pairs():
 
-    urls = [
-
-        "https://fapi1.binance.com/fapi/v1/exchangeInfo",
-        "https://fapi2.binance.com/fapi/v1/exchangeInfo",
-        "https://fapi3.binance.com/fapi/v1/exchangeInfo"
-
-    ]
+    url = "https://fapi.binance.com/fapi/v1/exchangeInfo"
 
     headers = {
-        "User-Agent": "Mozilla/5.0"
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json"
     }
 
-    for url in urls:
+    try:
 
-        try:
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=20
+        )
 
-            response = requests.get(
-                url,
-                headers=headers,
-                timeout=15
-            )
+        print(
+            f"Status Code: {response.status_code}",
+            flush=True
+        )
 
-            response.raise_for_status()
-
-            data = response.json()
-
-            if "symbols" not in data:
-                continue
-
-            usdt_pairs = []
-
-            for symbol in data["symbols"]:
-
-                symbol_name = symbol.get(
-                    "symbol", ""
-                )
-
-                if (
-                    symbol.get(
-                        "quoteAsset"
-                    ) == "USDT"
-                    and
-                    symbol.get(
-                        "status"
-                    ) == "TRADING"
-                    and
-                    symbol.get(
-                        "contractType"
-                    ) == "PERPETUAL"
-                    and "_"
-                    not in symbol_name
-                ):
-
-                    usdt_pairs.append(
-                        symbol_name
-                    )
+        if response.status_code != 200:
 
             print(
-                f"✅ {len(usdt_pairs)} futures coin bulundu"
+                f"❌ Binance HTTP {response.status_code}",
+                flush=True
             )
 
-            return sorted(
-                usdt_pairs
-            )
+            return []
 
-        except Exception as e:
+        data = response.json()
 
+        symbols = data.get(
+            "symbols",
+            []
+        )
+
+        usdt_pairs = []
+
+        for symbol in symbols:
+
+            if (
+                symbol.get("quoteAsset") == "USDT"
+                and symbol.get("status") == "TRADING"
+                and symbol.get("contractType") == "PERPETUAL"
+            ):
+
+                usdt_pairs.append(
+                    symbol["symbol"]
+                )
+
+        print(
+            f"✅ {len(usdt_pairs)} futures coin bulundu",
+            flush=True
+        )
+
+        return sorted(usdt_pairs)
+
+    except Exception as e:
+
+        print(
+            f"❌ Binance futures hata: {e}",
+            flush=True
+        )
+
+        return []
             print(
                 f"❌ Endpoint hata: {url}"
             )
